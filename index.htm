@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>Cartas</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header-row">
+    <h1>Mis Cartas ✉️</h1>
+    <button id="themeToggle" title="Cambiar tema">🌓</button>
+</div>
+
+<button id="addNote">+ Nueva carta</button>
+
+<div id="notesContainer"></div>
+
+<!-- list panel para acciones -->
+<div id="notesListContainer">
+    <h2>Lista de cartas</h2>
+    <ul id="notesList"></ul>
+</div>
+
+</div>
+
+
+<!-- modal para escribir/editar carta -->
+<div id="noteModal" class="modal">
+    <div class="modal-content">
+        <h2 id="modalTitle">Nueva carta</h2>
+        <textarea id="noteText" rows="6" placeholder="Escribe tu carta aquí..."></textarea>
+        <div class="modal-buttons">
+            <button id="saveNote">Guardar</button>
+            <button id="cancelNote">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
