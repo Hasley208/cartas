@@ -1,6 +1,6 @@
 body{
 
-background: linear-gradient(135deg,#0f0f0f,#1c1c1c);
+background: linear-gradient(135deg,#ffffff,#1c1c1c);
 
 color:white;
 
@@ -115,7 +115,7 @@ width:120px;
 
 height:80px;
 
-background:#2a2a2a;
+background:#f9f4e6; /* color papel beige claro */
 
 border-radius:6px;
 
@@ -125,28 +125,17 @@ cursor:pointer;
 
 transition:0.3s;
 
-box-shadow:0 5px 15px rgba(0,0,0,0.5);
+box-shadow:0 5px 15px rgba(0,0,0,0.3);
+
+color:#333; /* texto oscuro si se usa */
 
 }
+
 
 .envelope:hover{
 
 transform:translateY(-5px) scale(1.05);
 
-}
-
-/* preview snippet */
-.envelope .snippet{
-    position:absolute;
-    bottom:5px;
-    left:5px;
-    right:5px;
-    font-size:10px;
-    line-height:1.2;
-    color:#ccc;
-    overflow:hidden;
-    white-space:nowrap;
-    text-overflow:ellipsis;
 }
 
 /* animation on add/remove */
@@ -347,7 +336,8 @@ body.dark-mode .container{
     color:#ddd;
 }
 body.dark-mode .envelope{
-    background:#3a3a3a;
+    background:#f9f4e6;
+    color:#333;
 }
 body.dark-mode .envelope::before{
     border-top-color:#4a4a4a;

@@ -24,11 +24,6 @@ function createEnvelope(text, index) {
     envelope.dataset.index = index;
     envelope.draggable = true;
 
-    // show preview snippet
-    let snippet = document.createElement("div");
-    snippet.className = "snippet";
-    snippet.textContent = text.length > 30 ? text.slice(0, 30) + "…" : text;
-    envelope.appendChild(snippet);
 
     envelope.onclick = function () {
         openModal(text, index);
