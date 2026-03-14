@@ -12,13 +12,16 @@
 <div class="container">
 
 <div class="header-row">
-    <h1> 100 Razones por las que te amo ✉️</h1>
+    <h1> 100 Razones ✉️</h1>
     <button id="themeToggle" title="Cambiar tema">🌓</button>
 </div>
 
-<button id="addNote">+ Nueva carta</button>
+<div class="input-area">
+  <textarea id="carta" placeholder="Escribe tu carta aquí..."></textarea>
+  <button onclick="enviarCarta()">Enviar carta</button>
+</div>
 
-<div id="notesContainer"></div>
+<div id="listaCartas" aria-label="Cartas guardadas"></div>
 
 <!-- list panel para acciones -->
 <div id="notesListContainer">
@@ -41,6 +44,8 @@
     </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 <script src="script.js"></script>
 
 </body>

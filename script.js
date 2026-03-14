@@ -1,147 +1,142 @@
-const button = document.getElementById("addNote");
-const container = document.getElementById("notesContainer");
-const themeToggle = document.getElementById("themeToggle");
-
-let notes = JSON.parse(localStorage.getItem("notes")) || [];
-let currentEditIndex = null;
-
-// theme initialization
-function loadTheme(){
-    const t = localStorage.getItem("theme") || "light";
-    if(t === "dark") document.body.classList.add("dark-mode");
-}
-loadTheme();
-
-themeToggle.onclick = () => {
-    document.body.classList.toggle("dark-mode");
-    const isDark = document.body.classList.contains("dark-mode");
-    localStorage.setItem("theme", isDark ? "dark" : "light");
+// Configuración de Firebase (usa el SDK de Firebase v9 en modo compat vía CDN)
+const firebaseConfig = {
+  apiKey: "AIzaSyDwdWutjmuvxXu61CQxw3BI3VaP6SYdYN4",
+  authDomain: "cartas-web.firebaseapp.com",
+  projectId: "cartas-web",
+  storageBucket: "cartas-web.firebasestorage.app",
+  messagingSenderId: "648385945198",
+  appId: "1:648385945198:web:3d30f0fc7dc6dabd3f107f",
+  measurementId: "G-J3RFS0SNE5"
 };
 
-function createEnvelope(text, index) {
-    let envelope = document.createElement("div");
-    envelope.className = "envelope";
-    envelope.dataset.index = index;
-    envelope.draggable = true;
+// Inicializa Firebase y Firestore
+const app = firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
+const modal = document.getElementById("noteModal");
+const modalTextarea = document.getElementById("noteText");
+const saveNoteBtn = document.getElementById("saveNote");
+const cancelNoteBtn = document.getElementById("cancelNote");
+const themeToggle = document.getElementById("themeToggle");
 
-    envelope.onclick = function () {
-        openModal(text, index);
-    };
+let editingId = null;
 
-    // drag/drop
-    envelope.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', index);
-    });
-    envelope.addEventListener('dragover', e => {
-        e.preventDefault();
-    });
-    envelope.addEventListener('drop', e => {
-        e.preventDefault();
-        const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
-        const to = index;
-        if (from !== to) {
-            const [moved] = notes.splice(from, 1);
-            notes.splice(to, 0, moved);
-            localStorage.setItem("notes", JSON.stringify(notes));
-            renderNotes();
-        }
-    });
-
-    container.appendChild(envelope);
-}
-
-function renderNotes() {
-    // envelopes grid
-    container.innerHTML = "";
-    notes.forEach((note, i) => createEnvelope(note, i));
-
-    // side list
-    const list = document.getElementById("notesList");
-    list.innerHTML = "";
-    notes.forEach((note, i) => {
-        const li = document.createElement("li");
-        li.draggable = true;
-        // show generic name instead of full text
-        li.textContent = `Carta ${i + 1}`;
-
-        const editBtn = document.createElement("button");
-        editBtn.textContent = "Editar";
-        editBtn.onclick = () => {
-            openModal(note, i);
-        };
-
-        const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "Borrar";
-        deleteBtn.onclick = () => {
-            if (confirm("¿Eliminar esta carta?")) {
-                notes.splice(i, 1);
-                localStorage.setItem("notes", JSON.stringify(notes));
-                renderNotes();
-            }
-        };
-
-        // drag/drop for list
-        li.addEventListener('dragstart', e => {
-            e.dataTransfer.setData('text/plain', i);
-        });
-        li.addEventListener('dragover', e => e.preventDefault());
-        li.addEventListener('drop', e => {
-            e.preventDefault();
-            const from = parseInt(e.dataTransfer.getData('text/plain'), 10);
-            const to = i;
-            if (from !== to) {
-                const [moved] = notes.splice(from, 1);
-                notes.splice(to, 0, moved);
-                localStorage.setItem("notes", JSON.stringify(notes));
-                renderNotes();
-            }
-        });
-
-        li.appendChild(editBtn);
-        li.appendChild(deleteBtn);
-        list.appendChild(li);
-    });
-}
-
-// modal elements
-const modal = document.getElementById('noteModal');
-const modalTitle = document.getElementById('modalTitle');
-const noteText = document.getElementById('noteText');
-const saveBtn = document.getElementById('saveNote');
-const cancelBtn = document.getElementById('cancelNote');
-
-function openModal(text = '', index = null) {
-    currentEditIndex = index;
-    modalTitle.textContent = index === null ? 'Nueva carta' : 'Editar carta';
-    noteText.value = text;
-    modal.classList.add('open');
-    noteText.focus();
+function openModal(text = "", id = null) {
+  editingId = id;
+  modalTextarea.value = text;
+  modal.classList.add("open");
+  modalTextarea.focus();
 }
 
 function closeModal() {
-    modal.classList.remove('open');
-    noteText.value = '';
-    currentEditIndex = null;
+  editingId = null;
+  modal.classList.remove("open");
 }
 
-saveBtn.onclick = () => {
-    const text = noteText.value.trim();
-    if (text) {
-        if (currentEditIndex === null) {
-            notes.push(text);
-        } else {
-            notes[currentEditIndex] = text;
-        }
-        localStorage.setItem("notes", JSON.stringify(notes));
-        renderNotes();
+function createEnvelopeCard(id, mensaje) {
+  const envelope = document.createElement("div");
+  envelope.className = "envelope";
+
+  const preview = document.createElement("div");
+  preview.className = "envelope-preview";
+  preview.textContent = mensaje.length > 60 ? mensaje.slice(0, 60) + "…" : mensaje;
+  envelope.appendChild(preview);
+
+  const editBtn = document.createElement("button");
+  editBtn.className = "action-btn edit-btn";
+  editBtn.title = "Editar carta";
+  editBtn.textContent = "✎";
+  editBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
+    openModal(mensaje, id);
+  });
+  envelope.appendChild(editBtn);
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.className = "action-btn delete-btn";
+  deleteBtn.title = "Borrar carta";
+  deleteBtn.textContent = "✕";
+  deleteBtn.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    if (!confirm("¿Eliminar esta carta?")) return;
+    try {
+      await db.collection("cartas").doc(id).delete();
+      cargarCartas();
+    } catch (err) {
+      console.error("Error al borrar carta:", err);
     }
+  });
+  envelope.appendChild(deleteBtn);
+
+  envelope.addEventListener("click", () => {
+    openModal(mensaje, id);
+  });
+
+  return envelope;
+}
+
+async function cargarCartas() {
+  const contenedor = document.getElementById("listaCartas");
+  contenedor.innerHTML = "";
+
+  try {
+    const querySnapshot = await db
+      .collection("cartas")
+      .orderBy("creado", "desc")
+      .get();
+
+    querySnapshot.forEach((doc) => {
+      const carta = doc.data();
+      contenedor.appendChild(createEnvelopeCard(doc.id, carta.mensaje));
+    });
+  } catch (error) {
+    console.error("Error cargando cartas:", error);
+  }
+}
+
+async function guardarCarta(texto) {
+  if (!texto || !texto.trim()) return;
+
+  try {
+    if (editingId) {
+      await db.collection("cartas").doc(editingId).update({
+        mensaje: texto.trim(),
+      });
+    } else {
+      await db.collection("cartas").add({
+        mensaje: texto.trim(),
+        creado: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+    }
+
     closeModal();
-};
+    document.getElementById("carta").value = "";
+    cargarCartas();
+  } catch (error) {
+    console.error("Error guardando carta:", error);
+  }
+}
 
-cancelBtn.onclick = closeModal;
+function enviarCarta() {
+  const texto = document.getElementById("carta").value;
+  guardarCarta(texto);
+}
 
-// initialize display
-renderNotes();
+saveNoteBtn.addEventListener("click", () => guardarCarta(modalTextarea.value));
+cancelNoteBtn.addEventListener("click", closeModal);
 
-button.onclick = () => openModal();
+modal.addEventListener("click", (event) => {
+  if (event.target === modal) closeModal();
+});
+
+window.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && modal.classList.contains("open")) {
+    closeModal();
+  }
+});
+
+themeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
+});
+
+cargarCartas();
