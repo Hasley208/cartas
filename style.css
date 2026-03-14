@@ -400,6 +400,15 @@ color:rgba(255,255,255,0.35);
     background:#ff2a55;
 }
 
+.modal-buttons button.secondary{
+    background:rgba(255,255,255,0.1);
+    color:#ff4b6e;
+}
+
+.modal-buttons button.secondary:hover{
+    background:rgba(255,255,255,0.2);
+}
+
 /* typography improvements */
 .envelope{
     font-size:13px;

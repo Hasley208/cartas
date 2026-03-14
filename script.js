@@ -14,8 +14,10 @@ const app = firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 const modal = document.getElementById("noteModal");
+const modalTitle = document.getElementById("modalTitle");
 const modalTextarea = document.getElementById("noteText");
 const saveNoteBtn = document.getElementById("saveNote");
+const deleteNoteBtn = document.getElementById("deleteNote");
 const cancelNoteBtn = document.getElementById("cancelNote");
 const themeToggle = document.getElementById("themeToggle");
 
@@ -24,49 +26,28 @@ let editingId = null;
 function openModal(text = "", id = null) {
   editingId = id;
   modalTextarea.value = text;
+  modalTitle.textContent = editingId ? "Editar carta" : "Nueva carta";
   modal.classList.add("open");
+
+  if (editingId) {
+    deleteNoteBtn.style.display = "inline-flex";
+  } else {
+    deleteNoteBtn.style.display = "none";
+  }
+
   modalTextarea.focus();
 }
 
 function closeModal() {
   editingId = null;
   modal.classList.remove("open");
+  deleteNoteBtn.style.display = "none";
 }
 
 function createEnvelopeCard(id, mensaje) {
   const envelope = document.createElement("div");
   envelope.className = "envelope";
-
-  const preview = document.createElement("div");
-  preview.className = "envelope-preview";
-  preview.textContent = mensaje.length > 60 ? mensaje.slice(0, 60) + "…" : mensaje;
-  envelope.appendChild(preview);
-
-  const editBtn = document.createElement("button");
-  editBtn.className = "action-btn edit-btn";
-  editBtn.title = "Editar carta";
-  editBtn.textContent = "✎";
-  editBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    openModal(mensaje, id);
-  });
-  envelope.appendChild(editBtn);
-
-  const deleteBtn = document.createElement("button");
-  deleteBtn.className = "action-btn delete-btn";
-  deleteBtn.title = "Borrar carta";
-  deleteBtn.textContent = "✕";
-  deleteBtn.addEventListener("click", async (event) => {
-    event.stopPropagation();
-    if (!confirm("¿Eliminar esta carta?")) return;
-    try {
-      await db.collection("cartas").doc(id).delete();
-      cargarCartas();
-    } catch (err) {
-      console.error("Error al borrar carta:", err);
-    }
-  });
-  envelope.appendChild(deleteBtn);
+  envelope.title = "Abrir carta";
 
   envelope.addEventListener("click", () => {
     openModal(mensaje, id);
@@ -123,6 +104,20 @@ function enviarCarta() {
 }
 
 saveNoteBtn.addEventListener("click", () => guardarCarta(modalTextarea.value));
+
+deleteNoteBtn.addEventListener("click", async () => {
+  if (!editingId) return;
+  if (!confirm("¿Eliminar esta carta?")) return;
+
+  try {
+    await db.collection("cartas").doc(editingId).delete();
+    closeModal();
+    cargarCartas();
+  } catch (err) {
+    console.error("Error al borrar carta:", err);
+  }
+});
+
 cancelNoteBtn.addEventListener("click", closeModal);
 
 modal.addEventListener("click", (event) => {
